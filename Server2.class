@@ -1,0 +1,89 @@
+// Source code is decompiled from a .class file using FernFlower decompiler (from Intellij IDEA).
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+public class Server2 extends JFrame implements ActionListener {
+   JTextArea chatArea;
+   JTextField messageField;
+   JButton sendButton;
+   ServerSocket serverSocket;
+   Socket socket;
+   BufferedReader input;
+   PrintWriter output;
+
+   public Server2() {
+      this.setTitle("TCP Chat Server");
+      this.setSize(500, 400);
+      this.setDefaultCloseOperation(3);
+      this.setLayout(new BorderLayout());
+      this.chatArea = new JTextArea();
+      this.chatArea.setEditable(false);
+      this.add(new JScrollPane(this.chatArea), "Center");
+      JPanel var1 = new JPanel(new BorderLayout());
+      this.messageField = new JTextField();
+      this.sendButton = new JButton("Send");
+      var1.add(this.messageField, "Center");
+      var1.add(this.sendButton, "East");
+      this.add(var1, "South");
+      this.sendButton.addActionListener(this);
+      this.messageField.addActionListener(this);
+      this.setLocationRelativeTo((Component)null);
+      this.setVisible(true);
+      this.startServer();
+   }
+
+   public void startServer() {
+      try {
+         this.serverSocket = new ServerSocket(5000);
+         this.chatArea.append("Server Started...\n");
+         this.chatArea.append("Waiting for Client...\n");
+         this.socket = this.serverSocket.accept();
+         this.chatArea.append("Client Connected.\n");
+         this.input = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+         this.output = new PrintWriter(this.socket.getOutputStream(), true);
+         Thread var1 = new Thread(() -> {
+            String var1;
+            try {
+               while((var1 = this.input.readLine()) != null) {
+                  this.chatArea.append("Client : " + var1 + "\n");
+               }
+            } catch (Exception var2) {
+               this.chatArea.append("Connection Closed.\n");
+            }
+
+         });
+         var1.start();
+      } catch (Exception var2) {
+         this.chatArea.append("Error: " + var2.getMessage());
+      }
+
+   }
+
+   public void actionPerformed(ActionEvent var1) {
+      String var2 = this.messageField.getText();
+      if (!var2.isEmpty() && this.output != null) {
+         this.output.println(var2);
+         this.chatArea.append("Server : " + var2 + "\n");
+         this.messageField.setText("");
+      }
+
+   }
+
+   public static void main(String[] var0) {
+      SwingUtilities.invokeLater(() -> new Server2());
+   }
+}
